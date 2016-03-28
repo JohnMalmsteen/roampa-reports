@@ -17,9 +17,8 @@ import org.json.simple.parser.JSONParser;
 @Controller
 public class IndexController {
 	@RequestMapping("/index")
-	public void index(Model model){
-		//List<User> userList = userService.getUserList();
-		//model.addAttribute("userList", userList);
+	public void index(){
+		
 	}
 	
 	@RequestMapping(value="/process")
