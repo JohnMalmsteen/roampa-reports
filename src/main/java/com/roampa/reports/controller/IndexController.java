@@ -4,6 +4,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.roampa.reports.data.SQLData;
 import com.roampa.reports.model.FormFieldEntry;
 
 import org.json.simple.JSONObject;
@@ -33,7 +35,8 @@ public class IndexController {
 	
 	@RequestMapping(value="/process")
 	@ResponseBody
-	public String process(Model model, @RequestBody String string) throws UnsupportedEncodingException, ParseException{
+	public String process(Model model, @RequestBody String string) throws UnsupportedEncodingException, ParseException
+	{
 		String decodedStr = URLDecoder.decode(string, "UTF-8");
 		JSONParser parser = new JSONParser();
 		
@@ -53,12 +56,12 @@ public class IndexController {
 		if(tablesFields.isEmpty()){
 			return "No fields selected: Select from the menu on the left.";
 		}else{
-			
 			List<FormFieldEntry> formList = formatArray(tablesFields);
-			
-			return selectStatement(formList);
+			String query = selectStatement(formList);
+			SQLData sqlConnector = new SQLData();
+			String retValue = sqlConnector.getResults(query);
+			return retValue;
 		}
-
 	}
 	
 	private List<FormFieldEntry> formatArray(Map<String, String> tablesFields){
@@ -103,9 +106,9 @@ public class IndexController {
 		if(whereClause.length() != 0){
 			query.append("\nWHERE");
 			query.append(whereClause);
-			query.append(" AND\ncompany_id = " + companyId);
+			query.append(" AND\nusers_view.companyid = " + companyId);
 		}else{
-			query.append("\nWHERE\ncompany_id = " + companyId);
+			query.append("\nWHERE\nusers_view.companyid = " + companyId);
 		}
 		return query.toString();
 	}
@@ -113,6 +116,7 @@ public class IndexController {
 	private String prepareWhereClause(List<FormFieldEntry> formList){
 		String zeroTime = "00:00:00";
 		String zeroDateTime = "0000-00-00 00:00:00";
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 		
 		StringBuilder whereClause = new StringBuilder();
 		for(FormFieldEntry entry : formList){
@@ -131,13 +135,13 @@ public class IndexController {
 					whereClause.append("\n" + entry.getFieldName() + " LIKE '" + entry.getFieldValue() + "' AND ");
 					break;
 				case "input-startdate":
-					if(entry.getFieldValue().matches("/^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$/")){
+					if(entry.getFieldValue().matches("\\d{4}-\\d{2}-\\d{2}")){
 						whereClause.append("\n(" + entry.getFieldName() + " BETWEEN '" + entry.getFieldValue() + " " + zeroTime + "' AND ");
-						whereClause.append("\n'" + new SimpleDateFormat("yyyy-mm-dd").toString() + " " + zeroTime + "') AND");
+						whereClause.append("\n'" + sdf.format(new Date()) + " " + zeroTime + "') AND");
 					}
 					break;
 				case "input-enddate":
-					if(entry.getFieldValue().matches("/^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$/")){
+					if(entry.getFieldValue().matches("\\d{4}-\\d{2}-\\d{2}")){
 						whereClause.append("\n(" + entry.getFieldName() + " BETWEEN '"+ zeroDateTime + "' AND ");
 						whereClause.append("\n'" + entry.getFieldValue() + " " + zeroTime + "') AND");
 					}
@@ -147,7 +151,7 @@ public class IndexController {
 		}
 		
 		if(whereClause.length() > 5)
-			whereClause.delete(whereClause.length()-5, whereClause.length());
+			whereClause.delete(whereClause.length()-4, whereClause.length());
 		
 		return whereClause.toString();
 	}
