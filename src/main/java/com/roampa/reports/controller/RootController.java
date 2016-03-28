@@ -5,10 +5,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 @Controller
-public class HelloController {
-	@RequestMapping("hi")
-	@ResponseBody
+public class RootController {
+	@RequestMapping("/")
 	public String hi(){
-		return "Hello World";
+		return "index";
 	}
 }
