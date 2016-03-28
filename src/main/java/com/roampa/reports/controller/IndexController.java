@@ -2,11 +2,14 @@ package com.roampa.reports.controller;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -50,12 +53,10 @@ public class IndexController {
 		if(tablesFields.isEmpty()){
 			return "No fields selected: Select from the menu on the left.";
 		}else{
-			StringBuilder builder = new StringBuilder();
+			
 			List<FormFieldEntry> formList = formatArray(tablesFields);
-			for(FormFieldEntry entry : formList){
-				builder.append(entry.toString());
-			}
-			return builder.toString();
+			
+			return selectStatement(formList);
 		}
 
 	}
@@ -70,9 +71,84 @@ public class IndexController {
 			String fieldType = fieldName.substring(fieldName.lastIndexOf('.')+1, fieldName.length());
 			fieldName = fieldName.substring(0, fieldName.lastIndexOf('.'));
 			String fieldValue = entry.getValue();
+			fieldValue = fieldValue.replaceAll("\\;", "");
 			
 			returnList.add(new FormFieldEntry(fieldName, fieldType, fieldValue, tableName));
 		}
 		return returnList;
+	}
+	
+	private String selectStatement(List<FormFieldEntry> formList){
+		String companyId = "1"; // need to get this from some kind of context variable here
+		StringBuilder query = new  StringBuilder();
+		query.append("SELECT \n");
+		StringBuilder fields = new StringBuilder();
+		StringBuilder tables = new StringBuilder();
+		Set<String> tablesInUse = new HashSet<String>();
+		
+		for(FormFieldEntry entry : formList){
+			fields.append(entry.getFieldName() + ", ");
+			if(!tablesInUse.contains(entry.getTableName())){
+				tablesInUse.add(entry.getTableName());
+				tables.append(entry.getTableName() + " JOIN ");
+			}
+		}
+		tables.delete(tables.length()-6, tables.length());
+		fields.delete(fields.length()-2, fields.length());
+		String whereClause = prepareWhereClause(formList);
+		
+		query.append(fields.toString());
+		query.append("\nFROM\n");
+		query.append(tables.toString());
+		if(whereClause.length() != 0){
+			query.append("\nWHERE");
+			query.append(whereClause);
+			query.append(" AND\ncompany_id = " + companyId);
+		}else{
+			query.append("\nWHERE\ncompany_id = " + companyId);
+		}
+		return query.toString();
+	}
+	
+	private String prepareWhereClause(List<FormFieldEntry> formList){
+		String zeroTime = "00:00:00";
+		String zeroDateTime = "0000-00-00 00:00:00";
+		
+		StringBuilder whereClause = new StringBuilder();
+		for(FormFieldEntry entry : formList){
+			if(!entry.getFieldValue().equals("")){
+				switch(entry.getFieldType()){
+				case "input-varchar":
+					whereClause.append("\n" + entry.getFieldName() + " LIKE '" + entry.getFieldValue() + "' AND ");
+					break;
+				case "input-int":
+					whereClause.append("\n" + entry.getFieldName() + " = '" + entry.getFieldValue() + "' AND ");
+					break;
+				case "input-single-char":
+					whereClause.append("\n" + entry.getFieldName() + " = '" + entry.getFieldValue().charAt(0) + "' AND ");
+					break;
+				case "input-multiple-char":
+					whereClause.append("\n" + entry.getFieldName() + " LIKE '" + entry.getFieldValue() + "' AND ");
+					break;
+				case "input-startdate":
+					if(entry.getFieldValue().matches("/^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$/")){
+						whereClause.append("\n(" + entry.getFieldName() + " BETWEEN '" + entry.getFieldValue() + " " + zeroTime + "' AND ");
+						whereClause.append("\n'" + new SimpleDateFormat("yyyy-mm-dd").toString() + " " + zeroTime + "') AND");
+					}
+					break;
+				case "input-enddate":
+					if(entry.getFieldValue().matches("/^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$/")){
+						whereClause.append("\n(" + entry.getFieldName() + " BETWEEN '"+ zeroDateTime + "' AND ");
+						whereClause.append("\n'" + entry.getFieldValue() + " " + zeroTime + "') AND");
+					}
+					break;
+				}
+			}
+		}
+		
+		if(whereClause.length() > 5)
+			whereClause.delete(whereClause.length()-5, whereClause.length());
+		
+		return whereClause.toString();
 	}
 }
