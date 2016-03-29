@@ -2,6 +2,7 @@ package com.roampa.reports.controller;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.roampa.reports.data.SQLData;
 import com.roampa.reports.model.FormFieldEntry;
+import com.roampa.reports.service.HTMLTableBuilderService;
 
 import org.json.simple.JSONObject;
 import org.json.simple.JSONArray;
@@ -58,8 +60,13 @@ public class IndexController {
 		}else{
 			List<FormFieldEntry> formList = formatArray(tablesFields);
 			String query = selectStatement(formList);
-			SQLData sqlConnector = new SQLData();
-			String retValue = sqlConnector.getResults(query);
+			HTMLTableBuilderService tableBuilder = new HTMLTableBuilderService();
+			String retValue = null;
+			try {
+				retValue = tableBuilder.getTable(query);
+			} catch (SQLException e) {
+				retValue = e.getMessage();
+			}
 			return retValue;
 		}
 	}
