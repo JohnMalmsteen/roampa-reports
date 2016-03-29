@@ -221,7 +221,7 @@
 			<div class="menu">
 				<button class="menu-buttons" type="button" onclick="menu_reset(); return false;">Reset Fields</button>
 				<button id="pdfButton" class="menu-buttons" type="button">Save as PDF</button>
-				<button class="menu-buttons" type="button">Save as Excel</button>
+				<button id="xlsButton" class="menu-buttons" type="button">Save as Excel</button>
 				<button class="menu-buttons" type="button" onclick="show_html(); return false;">Show</button>
 				<!-- <select class="dropdown-list" name="company_id">
 					replace get_company() 

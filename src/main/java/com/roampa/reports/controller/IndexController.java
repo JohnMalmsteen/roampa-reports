@@ -30,6 +30,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.roampa.reports.data.SQLData;
 import com.roampa.reports.model.FormFieldEntry;
+import com.roampa.reports.service.ExcelBuilderService;
 import com.roampa.reports.service.HTMLTableBuilderService;
 import com.roampa.reports.service.PDFBuilderService;
 
@@ -83,7 +84,7 @@ public class IndexController {
 	
 	@RequestMapping(value="pdf", method= RequestMethod.GET)
 	@ResponseBody
-	public ResponseEntity<byte[]> pdf(Model model, @RequestParam String val) throws UnsupportedEncodingException, ParseException{
+	public ResponseEntity<byte[]> pdf(Model model, @RequestParam String val) {
 		String query = new String(Base64.getDecoder().decode(val.getBytes()));
 		PDFBuilderService pdfBuilder = new PDFBuilderService();
 		byte [] pdfBytes = pdfBuilder.createPDF(query);
@@ -96,6 +97,22 @@ public class IndexController {
 	    ResponseEntity<byte[]> response = new ResponseEntity<byte[]>(pdfBytes, headers, HttpStatus.OK);
 	    return response;
 		
+	}
+	
+	@RequestMapping(value="xls", method=RequestMethod.GET)
+	@ResponseBody
+	public ResponseEntity<byte[]> xls(Model model, @RequestParam String val) {
+		String query = new String(Base64.getDecoder().decode(val.getBytes()));
+		ExcelBuilderService xlsBuilder = new ExcelBuilderService();
+		byte [] xlsBytes = xlsBuilder.createExcel(query);
+		
+		HttpHeaders headers = new HttpHeaders();
+	    headers.setContentType(MediaType.parseMediaType("application/vnd.ms-excel"));
+	    String filename = "report.xls";
+	    headers.setContentDispositionFormData(filename, filename);
+	    headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
+	    ResponseEntity<byte[]> response = new ResponseEntity<byte[]>(xlsBytes, headers, HttpStatus.OK);
+	    return response;
 	}
 	
 	@RequestMapping(value="genQuery", method=RequestMethod.POST)
