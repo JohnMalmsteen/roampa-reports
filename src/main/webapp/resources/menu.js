@@ -5,10 +5,12 @@ function menu_reset() {
 
 function show_html(){
 	var formData = JSON.stringify($("#selectedfieldsform").serializeArray());
-	console.log(formData);
+
+	var postUrl = 'process';
+	
 	$.ajax({
 		  method: 'post',
-		  url: 'process',
+		  url: postUrl,
 		  data: formData,
 		  success: function(data) {
 			$('#data').html(data);
@@ -16,3 +18,23 @@ function show_html(){
 		  contentType: 'application/json'
 		});				
 }
+
+function save_pdf(){
+	var formData = JSON.stringify($("#selectedfieldsform").serializeArray());
+
+	var postUrl = 'genQuery';
+	
+	$.ajax({
+		  method: 'post',
+		  url: postUrl,
+		  data: formData,
+		  success: function(data) {
+			  window.location = "pdf?val=" + data;
+		  },
+		  contentType: 'application/text'
+		});				
+}
+
+document.getElementById("pdfButton").addEventListener("click", function(){
+	save_pdf('pdf');
+});

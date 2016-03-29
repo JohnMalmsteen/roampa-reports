@@ -1,10 +1,13 @@
 package com.roampa.reports.controller;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -13,15 +16,22 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.roampa.reports.data.SQLData;
 import com.roampa.reports.model.FormFieldEntry;
 import com.roampa.reports.service.HTMLTableBuilderService;
+import com.roampa.reports.service.PDFBuilderService;
 
 import org.json.simple.JSONObject;
 import org.json.simple.JSONArray;
@@ -71,6 +81,51 @@ public class IndexController {
 		}
 	}
 	
+	@RequestMapping(value="pdf", method= RequestMethod.GET)
+	@ResponseBody
+	public ResponseEntity<byte[]> pdf(Model model, @RequestParam String val) throws UnsupportedEncodingException, ParseException{
+		String query = new String(Base64.getDecoder().decode(val.getBytes()));
+		PDFBuilderService pdfBuilder = new PDFBuilderService();
+		byte [] pdfBytes = pdfBuilder.createPDF(query);
+		
+		HttpHeaders headers = new HttpHeaders();
+	    headers.setContentType(MediaType.parseMediaType("application/pdf"));
+	    String filename = "report.pdf";
+	    headers.setContentDispositionFormData(filename, filename);
+	    headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
+	    ResponseEntity<byte[]> response = new ResponseEntity<byte[]>(pdfBytes, headers, HttpStatus.OK);
+	    return response;
+		
+	}
+	
+	@RequestMapping(value="genQuery", method=RequestMethod.POST)
+	@ResponseBody
+	public String getQuery(@RequestBody String string) throws ParseException, UnsupportedEncodingException{
+		String decodedStr = URLDecoder.decode(string, "UTF-8");
+		JSONParser parser = new JSONParser();
+		
+		Object obj = parser.parse(decodedStr);
+		JSONArray array = (JSONArray)obj;
+		
+		Map<String, String> tablesFields = new HashMap<String, String>();
+		
+		
+		for(Object elem : array){
+			JSONObject jsonelem = (JSONObject)elem;
+			if(!jsonelem.get("name").equals("action") && !jsonelem.get("name").equals("company_id")){
+				tablesFields.put(jsonelem.get("name").toString(), jsonelem.get("value").toString());
+			}
+		}
+		
+		if(tablesFields.isEmpty()){
+			return "No Fields Selected, Select from the left side menu";
+		}else{
+			List<FormFieldEntry> formList = formatArray(tablesFields);
+			byte[]   bytesEncoded = Base64.getEncoder().encode(selectStatement(formList).getBytes());
+			return new String(bytesEncoded);
+		}
+	}
+	
 	private List<FormFieldEntry> formatArray(Map<String, String> tablesFields){
 		List<FormFieldEntry> returnList = new ArrayList<FormFieldEntry>();
 		
@@ -95,9 +150,13 @@ public class IndexController {
 		StringBuilder fields = new StringBuilder();
 		StringBuilder tables = new StringBuilder();
 		Set<String> tablesInUse = new HashSet<String>();
-		
+		Set<String> fieldsInUse = new HashSet<String>();
 		for(FormFieldEntry entry : formList){
-			fields.append(entry.getFieldName() + ", ");
+			if(!fieldsInUse.contains(entry.getFieldName())){
+				fieldsInUse.add(entry.getFieldName());
+				fields.append(entry.getFieldName() + ", ");
+			}
+			
 			if(!tablesInUse.contains(entry.getTableName())){
 				tablesInUse.add(entry.getTableName());
 				tables.append(entry.getTableName() + " JOIN ");

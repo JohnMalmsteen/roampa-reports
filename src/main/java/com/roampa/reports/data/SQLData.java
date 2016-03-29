@@ -32,10 +32,12 @@ public class SQLData {
 		}catch(SQLException se){
 			//Handle errors for JDBC
 			System.out.println(se.getMessage());
+			cleanUp();
 			return null;
 		}catch(Exception e){
 			//Handle errors for Class.forName
 			System.out.println((e.getMessage()));
+			cleanUp();
 			return null;
 		}
 	}

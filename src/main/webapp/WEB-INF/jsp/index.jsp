@@ -10,8 +10,7 @@
   <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
  	
  	
-	<script type="text/javascript" src="<c:url value="/resources/dragndrop.js" />"></script>
-	<script type="text/javascript" src="<c:url value="/resources/menu.js" />"></script>
+	
 	<link rel="stylesheet" href="<c:url value="/resources/styles/style.css" />" />
 	<script>
 		 $(function() {
@@ -221,15 +220,15 @@
 		<form id="selectedfieldsform" action="process.php" method="POST" target="_blank">
 			<div class="menu">
 				<button class="menu-buttons" type="button" onclick="menu_reset(); return false;">Reset Fields</button>
-				<button class="menu-buttons" type="submit" name="action" value="save_as_pdf">Save as PDF</button>
-				<button class="menu-buttons" type="submit" name="action" value="save_as_excel">Save as Excel</button>
+				<button id="pdfButton" class="menu-buttons" type="button">Save as PDF</button>
+				<button class="menu-buttons" type="button">Save as Excel</button>
 				<button class="menu-buttons" type="button" onclick="show_html(); return false;">Show</button>
-				<select class="dropdown-list" name="company_id">
-					<!-- replace get_company() -->
+				<!-- <select class="dropdown-list" name="company_id">
+					replace get_company() 
 					<c:forEach items="${companies}" var="company">
 						<option value="${company.id }">$company.company</option>
 					</c:forEach>
-				</select>
+				</select> -->
 				
 			</div>
 			
@@ -247,6 +246,7 @@
 		</div>
 		
 	</div>
-	
+	<script type="text/javascript" src="<c:url value="/resources/dragndrop.js" />"></script>
+	<script type="text/javascript" src="<c:url value="/resources/menu.js" />"></script>
 </body>
 </html>
