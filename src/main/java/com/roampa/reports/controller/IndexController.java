@@ -1,7 +1,5 @@
 package com.roampa.reports.controller;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.sql.SQLException;
@@ -28,7 +26,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import com.roampa.reports.data.SQLData;
 import com.roampa.reports.model.FormFieldEntry;
 import com.roampa.reports.service.ExcelBuilderService;
 import com.roampa.reports.service.HTMLTableBuilderService;
@@ -189,9 +186,22 @@ public class IndexController {
 		if(whereClause.length() != 0){
 			query.append("\nWHERE");
 			query.append(whereClause);
-			query.append(" AND\nusers_view.companyid = " + companyId);
+			if(tablesInUse.contains("users_view")){
+				query.append(" AND\nusers_view.companyid = " + companyId);
+			}else if(tablesInUse.contains("users_events")){
+				query.append(" AND\nusers_events.companyid = " + companyId);
+			}else{
+				query.append(" AND\nusers_addresses.companyid = " + companyId);
+			}
+			
 		}else{
-			query.append("\nWHERE\nusers_view.companyid = " + companyId);
+			if(tablesInUse.contains("users_view")){
+				query.append(" WHERE users_view.companyid = " + companyId);
+			}else if(tablesInUse.contains("users_events")){
+				query.append(" WHERE users_events.companyid = " + companyId);
+			}else{
+				query.append(" WHERE users_addresses.companyid = " + companyId);
+			}
 		}
 		return query.toString();
 	}
