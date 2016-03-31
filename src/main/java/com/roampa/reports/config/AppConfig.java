@@ -16,6 +16,10 @@ import org.springframework.web.servlet.view.JstlView;
 @EnableWebMvc
 @ComponentScan(basePackages = {"com.roampa.reports.controller", "com.roampa.reports.model", "com.roampa.reports.service"})
 public class AppConfig extends WebMvcConfigurerAdapter {
+	private static final String DB_URL = "jdbc:mysql://localhost:8889/roampa";
+	private static final String DB_USER = "root";
+	private static final String DB_PASS = "root";
+
 	@Bean
 	public ViewResolver jspViewResolver(){
 		InternalResourceViewResolver resolver = new InternalResourceViewResolver();
@@ -35,4 +39,21 @@ public class AppConfig extends WebMvcConfigurerAdapter {
     public void configureDefaultServletHandling(DefaultServletHandlerConfigurer configurer) {
         configurer.enable();
     }
+
+
+	public static String getDbUrl() {
+		return DB_URL;
+	}
+
+
+	public static String getDbUser() {
+		return DB_USER;
+	}
+
+
+	public static String getDbPass() {
+		return DB_PASS;
+	}
+	
+	
 }

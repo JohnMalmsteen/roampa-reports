@@ -2,13 +2,15 @@ package com.roampa.reports.data;
 
 import java.sql.*;
 
+import com.roampa.reports.config.AppConfig;
+
 public class SQLData {
 	static final String JDBC_DRIVER = "com.mysql.jdbc.Driver";  
-	static final String DB_URL = "jdbc:mysql://localhost:8889/roampa";
+	static final String DB_URL = AppConfig.getDbUrl();
 	
 	//  Database credentials
-	static final String USER = "root";
-	static final String PASS = "root";
+	static final String USER = AppConfig.getDbUser();
+	static final String PASS = AppConfig.getDbPass();
 
 	private Connection conn = null;
 	private Statement stmt = null;
@@ -16,7 +18,7 @@ public class SQLData {
 	
 	public ResultSet getResults(String query){
 		try{
-			Class.forName("com.mysql.jdbc.Driver");
+			Class.forName(JDBC_DRIVER);
 
 			System.out.println("Connecting to database...");
 			conn = DriverManager.getConnection(DB_URL,USER,PASS);
