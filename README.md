@@ -58,5 +58,12 @@ Contins the WEB-INF/jsp views and the resources/ folder which contains the css a
 ## pom.xml
 Contains the maven build/dependency instructions.
 
+Run: 
+
+```sh
+$ mvn clean install 
+```
+
+from command line in the directory with pom.xml in it to install the software (it generates classes and a war file in the target/ directory.
 
 
